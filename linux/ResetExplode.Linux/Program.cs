@@ -16,8 +16,9 @@ class Program
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
+            .With(new X11PlatformOptions { RenderingMode = new[] { X11RenderingMode.Software } })
 #if DEBUG
 #endif
             .WithInterFont()
-            .LogToTrace();
+            .LogToTrace(Avalonia.Logging.LogEventLevel.Warning);
 }
