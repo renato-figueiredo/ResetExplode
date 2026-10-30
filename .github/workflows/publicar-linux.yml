@@ -1,0 +1,75 @@
+name: Publicar Linux
+
+# Versão Linux (linux/). Independente do workflow do Windows:
+#  - em PR ou push que mexe em linux/ (ou nos arquivos compartilhados), só compila e guarda o pacote como artefato;
+#  - ao criar uma tag linux-vX.Y.Z (ex.: linux-v0.16.1), gera o pacote e publica a release dessa versão.
+# Para lançar:  git tag linux-v0.16.1 && git push origin linux-v0.16.1
+on:
+  push:
+    branches: [main, linux]
+    tags: ['linux-v*']
+    paths: ['linux/**', 'BenchRenderer.cs', 'GameSimBench.cs', 'StressTester.cs', 'InfoNode.cs', '.github/workflows/publicar-linux.yml']
+  pull_request:
+    paths: ['linux/**', 'BenchRenderer.cs', 'GameSimBench.cs', 'StressTester.cs', 'InfoNode.cs', '.github/workflows/publicar-linux.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publicar-linux-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Versão
+        id: ver
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/linux-v* ]]; then
+            echo "version=${GITHUB_REF_NAME#linux-v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=0.0.0-dev.${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publicar (arquivo único, com o .NET embutido)
+        run: >
+          dotnet publish linux/ResetExplode.Linux/ResetExplode.Linux.csproj -c Release -r linux-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true
+          -p:DebugType=None -p:Version=${{ steps.ver.outputs.version }} -o dist -nologo
+
+      - name: Montar pacote
+        run: |
+          NAME="resetexplode-linux-x64-${{ steps.ver.outputs.version }}"
+          mkdir "$NAME"
+          cp dist/resetexplode "$NAME/"
+          cp linux/ResetExplode.Linux/Assets/logo.png "$NAME/resetexplode.png"
+          cp linux/instalar.sh linux/README.md "$NAME/"
+          chmod +x "$NAME/resetexplode" "$NAME/instalar.sh"
+          tar -czf "$NAME.tar.gz" "$NAME"
+          sha256sum "$NAME.tar.gz" > "$NAME.tar.gz.sha256"
+          echo "PACOTE=$NAME.tar.gz" >> "$GITHUB_ENV"
+
+      - name: Guardar como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: resetexplode-linux-x64
+          path: |
+            ${{ env.PACOTE }}
+            ${{ env.PACOTE }}.sha256
+
+      - name: Release da versão (tag)
+        if: startsWith(github.ref, 'refs/tags/linux-v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "$PACOTE" "$PACOTE.sha256" \
+            --title "RESET EXPLODE Linux ${{ steps.ver.outputs.version }}" \
+            --notes-file linux/NOVIDADES.md --latest=false
