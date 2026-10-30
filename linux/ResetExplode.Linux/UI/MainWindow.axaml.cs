@@ -31,15 +31,17 @@ public partial class MainWindow : Window
         SideVersion.Text = $"v{ver} · Linux";
         // --pagina=gpu abre direto numa tela (visao, sistema, sensores, gpu, stress, bench, permissoes)
         var arg = Environment.GetCommandLineArgs().FirstOrDefault(a => a.StartsWith("--pagina="))?[9..];
-        int idx = Array.FindIndex(new[] { "visao", "sistema", "sensores", "gpu", "stress", "bench", "permissoes" }, x => x == arg);
+        int idx = Array.FindIndex(new[] { "visao", "sistema", "sensores", "gpu", "jogos", "stress", "bench", "permissoes" }, x => x == arg);
         if (idx >= 0) Nav.SelectedIndex = idx;
+        _settings = LinuxSettings.Load();
+        _ = RefreshGames();
         _timer.Tick += (_, _) => Tick();
         _timer.Start();
         Tick();
         Closing += (_, _) => { _stress.Stop(); _benchCts?.Cancel(); };
     }
 
-    private static readonly string[] Pages = { "PageDash", "PageSystem", "PageSensors", "PageGpu", "PageStress", "PageBench", "PageSetup" };
+    private static readonly string[] Pages = { "PageDash", "PageSystem", "PageSensors", "PageGpu", "PageGames", "PageStress", "PageBench", "PageSetup" };
 
     private void OnNav(object? s, SelectionChangedEventArgs e)
     {

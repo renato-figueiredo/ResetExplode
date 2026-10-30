@@ -8,9 +8,9 @@ on:
   push:
     branches: [main, linux]
     tags: ['linux-v*']
-    paths: ['linux/**', 'BenchRenderer.cs', 'GameSimBench.cs', 'StressTester.cs', 'InfoNode.cs', '.github/workflows/publicar-linux.yml']
+    paths: ['linux/**', 'BenchRenderer.cs', 'GameSimBench.cs', 'StressTester.cs', 'InfoNode.cs', 'Vdf.cs', '.github/workflows/publicar-linux.yml']
   pull_request:
-    paths: ['linux/**', 'BenchRenderer.cs', 'GameSimBench.cs', 'StressTester.cs', 'InfoNode.cs', '.github/workflows/publicar-linux.yml']
+    paths: ['linux/**', 'BenchRenderer.cs', 'GameSimBench.cs', 'StressTester.cs', 'InfoNode.cs', 'Vdf.cs', '.github/workflows/publicar-linux.yml']
   workflow_dispatch:
 
 permissions:
