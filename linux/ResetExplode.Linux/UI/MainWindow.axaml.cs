@@ -31,9 +31,10 @@ public partial class MainWindow : Window
         SideVersion.Text = $"v{ver} · Linux";
         // --pagina=gpu abre direto numa tela (visao, sistema, sensores, gpu, stress, bench, permissoes)
         var arg = Environment.GetCommandLineArgs().FirstOrDefault(a => a.StartsWith("--pagina="))?[9..];
-        int idx = Array.FindIndex(new[] { "visao", "sistema", "sensores", "gpu", "jogos", "stress", "bench", "permissoes" }, x => x == arg);
+        int idx = Array.FindIndex(new[] { "visao", "sistema", "sensores", "gpu", "jogos", "compat", "stress", "bench", "permissoes" }, x => x == arg);
         if (idx >= 0) Nav.SelectedIndex = idx;
         _settings = LinuxSettings.Load();
+        BuildCompat();
         _ = RefreshGames();
         _timer.Tick += (_, _) => Tick();
         _timer.Start();
@@ -41,13 +42,16 @@ public partial class MainWindow : Window
         Closing += (_, _) => { _stress.Stop(); _benchCts?.Cancel(); };
     }
 
-    private static readonly string[] Pages = { "PageDash", "PageSystem", "PageSensors", "PageGpu", "PageGames", "PageStress", "PageBench", "PageSetup" };
+    private static readonly string[] Pages = { "PageDash", "PageSystem", "PageSensors", "PageGpu", "PageGames", "PageCompat", "PageStress", "PageBench", "PageSetup" };
 
     private void OnNav(object? s, SelectionChangedEventArgs e)
     {
         if (!_ready || (s as ListBox)?.SelectedItem is not ListBoxItem it) return;
         foreach (var name in Pages)
-            if (this.FindControl<Control>(name) is { } page) page.IsVisible = name == (string?)it.Tag;
+            if (this.FindControl<Control>(name) is { } page)
+            {
+                page.IsVisible = name == (string?)it.Tag;
+            }
     }
 
     // ---------------------------------------------------------------- Sistema
@@ -138,6 +142,19 @@ public partial class MainWindow : Window
         };
     }
 
+    /// <summary>Ícone e nome curto de cada chip, para o cartão e para os atalhos no topo da tela.</summary>
+    private static (Material.Icons.MaterialIconKind Icon, string Short) ChipStyle(string chip, string title, int n) => chip switch
+    {
+        "amdgpu" => (Material.Icons.MaterialIconKind.ExpansionCardVariant, title.Contains("610M") ? "iGPU" : "GPU"),
+        "k10temp" or "coretemp" => (Material.Icons.MaterialIconKind.Cpu64Bit, "CPU"),
+        "nvme" => (Material.Icons.MaterialIconKind.Harddisk, n > 1 ? $"SSD {n}" : "SSD"),
+        "spd5118" => (Material.Icons.MaterialIconKind.Memory, $"RAM {n}"),
+        "asus" or "asus_wmi_sensors" => (Material.Icons.MaterialIconKind.DeveloperBoard, "Placa-mãe"),
+        "zenergy" => (Material.Icons.MaterialIconKind.LightningBolt, "Consumo"),
+        var c when c.StartsWith("mt79") => (Material.Icons.MaterialIconKind.Wifi, "Wi-Fi"),
+        _ => (Material.Icons.MaterialIconKind.Thermometer, chip),
+    };
+
     private void UpdateSensors(List<SensorReading> all)
     {
         SensorCount.Text = $"{all.Count} sensores em {all.Select(s => s.Chip).Distinct().Count()} chips — atualiza a cada 1 s";
@@ -148,8 +165,15 @@ public partial class MainWindow : Window
             string title = ChipTitle(first.Hardware, g.Key, seen);
             if (!_sensorCards.TryGetValue(g.Key, out var card))
             {
-                _sensorCards[g.Key] = card = new LiveCard(title, first.Hardware);
+                var (icon, shortName) = ChipStyle(first.Hardware, title, seen[first.Hardware]);
+                _sensorCards[g.Key] = card = new LiveCard(title, first.Hardware, icon);
                 SensorPanel.Children.Add(card.Root);
+                var target = card.Root;
+                var jump = new Button { Classes = { "ghost" }, Margin = new Thickness(0, 0, 8, 8), Padding = new Thickness(12, 6),
+                    Content = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8, Children = {
+                        new Material.Icons.Avalonia.MaterialIcon { Kind = icon, Width = 16, Height = 16 }, new TextBlock { Text = shortName } } } };
+                jump.Click += (_, _) => target.BringIntoView();
+                SensorNav.Children.Add(jump);
             }
             foreach (var s in g)
             {

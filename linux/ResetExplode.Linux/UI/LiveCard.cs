@@ -15,13 +15,20 @@ public sealed class LiveCard
     public TextBlock Badge { get; }
     private readonly StackPanel _body = new() { Spacing = 2 };
 
-    public LiveCard(string title, string badge = "")
+    public LiveCard(string title, string badge = "", Material.Icons.MaterialIconKind? icon = null)
     {
         Title = new TextBlock { Text = title, FontSize = 15, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap };
         Badge = new TextBlock { Text = badge, FontSize = 10.5, FontWeight = FontWeight.SemiBold, Foreground = new SolidColorBrush(Color.Parse("#8C8C8C")), VerticalAlignment = VerticalAlignment.Center };
         var head = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
         DockPanel.SetDock(Badge, Dock.Right);
-        head.Children.Add(Badge); head.Children.Add(Title);
+        head.Children.Add(Badge);
+        if (icon != null)
+        {
+            var ic = new Material.Icons.Avalonia.MaterialIcon { Kind = icon.Value, Width = 20, Height = 20, Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center };
+            DockPanel.SetDock(ic, Dock.Left);
+            head.Children.Add(ic);
+        }
+        head.Children.Add(Title);
         var stack = new StackPanel();
         stack.Children.Add(head); stack.Children.Add(_body);
         Root = new Border { Classes = { "card" }, Child = stack };

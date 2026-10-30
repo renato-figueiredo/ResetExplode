@@ -37,6 +37,7 @@
             <ListBoxItem Tag="PageSensors"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="Thermometer" Width="18" Height="18" /><TextBlock Text="Sensores" /></StackPanel></ListBoxItem>
             <ListBoxItem Tag="PageGpu"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="ExpansionCardVariant" Width="18" Height="18" /><TextBlock Text="Placa de vídeo" /></StackPanel></ListBoxItem>
             <ListBoxItem Tag="PageGames"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="GamepadVariantOutline" Width="18" Height="18" /><TextBlock Text="Jogos" /></StackPanel></ListBoxItem>
+            <ListBoxItem Tag="PageCompat"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="BookOpenPageVariantOutline" Width="18" Height="18" /><TextBlock Text="Compatibilidade" /></StackPanel></ListBoxItem>
             <ListBoxItem Tag="PageStress"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="FireCircle" Width="18" Height="18" /><TextBlock Text="Stress" /></StackPanel></ListBoxItem>
             <ListBoxItem Tag="PageBench"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="SpeedometerMedium" Width="18" Height="18" /><TextBlock Text="Bench CPU" /></StackPanel></ListBoxItem>
             <ListBoxItem Tag="PageSetup"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="ShieldCheckOutline" Width="18" Height="18" /><TextBlock Text="Permissões" /></StackPanel></ListBoxItem>
@@ -77,7 +78,8 @@
         </DockPanel>
 
         <DockPanel x:Name="PageSensors" IsVisible="False">
-          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Sensores" /><TextBlock x:Name="SensorCount" Classes="sub" /></StackPanel>
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10"><TextBlock Classes="h1" Text="Sensores" /><TextBlock x:Name="SensorCount" Classes="sub" /></StackPanel>
+          <WrapPanel x:Name="SensorNav" DockPanel.Dock="Top" Margin="0,0,0,10" />
           <ScrollViewer><StackPanel x:Name="SensorPanel" Spacing="12" Margin="0,0,12,0" /></ScrollViewer>
         </DockPanel>
 
@@ -108,6 +110,14 @@
             </StackPanel>
           </Border>
           <ScrollViewer><WrapPanel x:Name="GameGrid" Margin="0,0,8,0" /></ScrollViewer>
+        </DockPanel>
+
+        <DockPanel x:Name="PageCompat" IsVisible="False">
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+            <TextBlock Classes="h1" Text="Compatibilidade" />
+            <TextBlock Classes="sub" Text="Onde conferir se um jogo roda no Linux, e o que fazer quando não roda" />
+          </StackPanel>
+          <ScrollViewer><StackPanel x:Name="CompatPanel" Spacing="12" Margin="0,0,12,0" /></ScrollViewer>
         </DockPanel>
 
         <DockPanel x:Name="PageStress" IsVisible="False">
