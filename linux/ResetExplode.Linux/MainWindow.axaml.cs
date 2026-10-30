@@ -18,9 +18,13 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _benchCts;
     private BenchRenderer? _bench;
 
+    private bool _gateRunning, _ready;
+
     public MainWindow()
     {
         InitializeComponent();
+        _ready = true;
+        RefreshSetup();
         SysTree.ItemsSource = Sys.Overview().Children;
         SysTree.ItemTemplate = new Avalonia.Controls.Templates.FuncTreeDataTemplate<InfoNode>(
             (n, _) => new TextBlock { Text = n.Display, Margin = new Thickness(0, 2) }, n => n.Children);
@@ -29,6 +33,72 @@ public partial class MainWindow : Window
         Tick();
         Closing += (_, _) => { _stress.Stop(); _benchCts?.Cancel(); };
     }
+
+    private static readonly string[] Pages = { "PageDash", "PageSystem", "PageSensors", "PageGpu", "PageStress", "PageBench", "PageSetup" };
+
+    private void OnNav(object? s, SelectionChangedEventArgs e)
+    {
+        if (!_ready || (s as ListBox)?.SelectedItem is not ListBoxItem it) return;
+        foreach (var name in Pages)
+            if (this.FindControl<Control>(name) is { } page) page.IsVisible = name == (string?)it.Tag;
+    }
+
+    // ---------------------------------------------------------------- Permissões
+
+    private static Control CheckRow(SetupCheck c)
+    {
+        var icon = new Material.Icons.Avalonia.MaterialIcon
+        {
+            Kind = c.Ok ? Material.Icons.MaterialIconKind.CheckCircleOutline
+                 : c.Required ? Material.Icons.MaterialIconKind.AlertCircleOutline : Material.Icons.MaterialIconKind.MinusCircleOutline,
+            Width = 20, Height = 20, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+            Foreground = c.Ok ? Avalonia.Media.Brushes.White : Avalonia.Media.Brushes.Gray,
+        };
+        var text = new StackPanel { Margin = new Thickness(12, 0, 0, 0) };
+        text.Children.Add(new TextBlock { Text = c.Title });
+        text.Children.Add(new TextBlock { Text = c.Detail, Classes = { "sub" }, FontSize = 12, TextWrapping = Avalonia.Media.TextWrapping.Wrap });
+        var row = new DockPanel();
+        DockPanel.SetDock(icon, Avalonia.Controls.Dock.Left);
+        row.Children.Add(icon); row.Children.Add(text);
+        return row;
+    }
+
+    /// <summary>Reavalia as permissões; sem elas, a tela de configuração cobre o app inteiro.</summary>
+    private void RefreshSetup()
+    {
+        var checks = Setup.Checks();
+        foreach (var list in new[] { GateList, SetupListPage })
+        {
+            list.Children.Clear();
+            foreach (var c in checks) list.Children.Add(CheckRow(c));
+        }
+        Gate.IsVisible = !Setup.Ready(checks);
+    }
+
+    private async void OnGateGo(object? s, RoutedEventArgs e)
+    {
+        if (_gateRunning) return;
+        _gateRunning = true;
+        GateGo.IsEnabled = false;
+        GateLogBox.IsVisible = true;
+        GateLog.Text = "Aguardando a janela de senha do sistema…\n";
+        int code = -1;
+        try
+        {
+            code = await Task.Run(() => Setup.RunAsync(line => Dispatcher.UIThread.Post(() =>
+            {
+                GateLog.Text += line + "\n";
+                GateScroll.ScrollToEnd();
+            })));
+        }
+        catch (Exception ex) { GateLog.Text += "Erro: " + ex.Message + "\n"; }
+        GateLog.Text += code == 0 ? "" : code == 126 || code == 127 ? "Permissão negada ou cancelada.\n" : $"O script terminou com código {code}.\n";
+        _gateRunning = false;
+        GateGo.IsEnabled = true;
+        RefreshSetup();
+    }
+
+    private void OnGateExit(object? s, RoutedEventArgs e) => Close();
 
     private static double? CpuTemp(List<SensorReading> all) =>
         all.FirstOrDefault(s => s.Hardware == "k10temp" && s.Name is "Tctl" or "Tdie")?.Value
@@ -51,6 +121,20 @@ public partial class MainWindow : Window
             : string.Join("\n──────────\n", _gpus.OrderBy(g => g.IsIntegrated).Select(g => g.Details()));
 
         double load = Sys.CpuLoad(), temp = CpuTemp(all) ?? 0;
+        var gpu = _gpus.OrderBy(g => g.IsIntegrated).FirstOrDefault();
+        var (memTotal, memAvail) = Sys.Mem();
+        double ramPct = memTotal == 0 ? 0 : 100.0 * (memTotal - memAvail) / memTotal;
+        DashSub.Text = $"{Sys.OsName()} · kernel {Sys.Kernel()}";
+        DashCpuLoad.Text = $"{load:F0} %"; DashCpuBar.Value = load;
+        DashCpuLine.Text = $"{temp:F0} °C · {Sys.CpuCurrentMhz():F0} MHz";
+        DashGpuLoad.Text = gpu?.Busy is double gb ? $"{gb:F0} %" : "—"; DashGpuBar.Value = gpu?.Busy ?? 0;
+        DashGpuLine.Text = gpu == null ? "sem GPU AMD" : $"{gpu.TempEdge:F0} °C · {gpu.PowerW:F0} W · {gpu.VramUsedGb:F1}/{gpu.VramTotalGb:F0} GB";
+        DashRam.Text = $"{ramPct:F0} %"; DashRamBar.Value = ramPct;
+        DashRamLine.Text = $"{(memTotal - memAvail) / 1048576.0:F1} / {memTotal / 1048576.0:F0} GB";
+        SideTemp.Text = $"{temp:F0} °C"; SideLoad.Text = $"{load:F0} %";
+        SideGpuTemp.Text = gpu?.TempEdge is double gt ? $"{gt:F0} °C" : "—";
+        SideGpuLoad.Text = gpu?.Busy is double gl ? $"{gl:F0} %" : "—";
+        SideStress.Text = _stress.Running ? $"rodando {DateTime.Now - _stressStart:mm\\:ss}" : "parado";
         if (_stress.Running)
         {
             _stressMaxTemp = Math.Max(_stressMaxTemp, temp);
@@ -75,10 +159,10 @@ public partial class MainWindow : Window
         if (StressCpu.IsChecked != true && StressRam.IsChecked != true) return;
         _stressStart = DateTime.Now; _stressMaxTemp = 0;
         _stress.Start(StressCpu.IsChecked == true, StressRam.IsChecked == true);
-        StressBtn.Content = "Parar";
+        StressBtn.Content = "PARAR";
     }
 
-    private void StopStress() { _stress.Stop(); StressBtn.Content = "Iniciar"; }
+    private void StopStress() { _stress.Stop(); StressBtn.Content = "INICIAR"; }
 
     // ---------------------------------------------------------------- Bench
 

@@ -1,49 +1,150 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="using:Material.Icons.Avalonia"
         x:Class="ResetExplode.Linux.MainWindow"
-        Title="RESET EXPLODE — Linux" Width="1100" Height="720" MinWidth="800" MinHeight="500">
-  <TabControl Margin="6">
-    <TabItem Header="Sistema">
-      <TreeView x:Name="SysTree" />
-    </TabItem>
+        Title="RESET EXPLODE" Icon="avares://resetexplode/Assets/logo.png"
+        Width="1180" Height="760" MinWidth="900" MinHeight="560">
+  <Grid>
+    <Grid x:Name="Shell" ColumnDefinitions="248,*">
+      <!-- Menu lateral arredondado -->
+      <Border Grid.Column="0" Margin="14" Background="{StaticResource Panel}" BorderBrush="{StaticResource Line}"
+              BorderThickness="1" CornerRadius="20">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="22,20,0,10" Spacing="10">
+            <Image Source="avares://resetexplode/Assets/logo.png" Width="24" Height="24" />
+            <TextBlock VerticalAlignment="Center"><Run Text="RESET" FontWeight="Bold" /><Run Text=" EXPLODE" FontWeight="Light" /></TextBlock>
+          </StackPanel>
 
-    <TabItem Header="Sensores">
-      <DockPanel>
-        <TextBlock x:Name="SensorCount" DockPanel.Dock="Top" Margin="8" Opacity="0.7" />
-        <ScrollViewer><TextBlock x:Name="SensorText" FontFamily="monospace" Margin="8" /></ScrollViewer>
-      </DockPanel>
-    </TabItem>
+          <StackPanel DockPanel.Dock="Bottom" Margin="14,6,14,14">
+            <Border Classes="card" Padding="14,10" CornerRadius="14">
+              <Grid ColumnDefinitions="46,*,Auto" RowDefinitions="Auto,Auto,Auto">
+                <TextBlock Classes="label" Text="CPU" VerticalAlignment="Center" Margin="0,3" />
+                <TextBlock x:Name="SideTemp" Grid.Column="1" Classes="mono" Text="—" Margin="0,3" />
+                <TextBlock x:Name="SideLoad" Grid.Column="2" Classes="mono" Foreground="{StaticResource Muted}" Text="—" Margin="0,3" />
+                <TextBlock Grid.Row="1" Classes="label" Text="GPU" VerticalAlignment="Center" Margin="0,3" />
+                <TextBlock x:Name="SideGpuTemp" Grid.Row="1" Grid.Column="1" Classes="mono" Text="—" Margin="0,3" />
+                <TextBlock x:Name="SideGpuLoad" Grid.Row="1" Grid.Column="2" Classes="mono" Foreground="{StaticResource Muted}" Text="—" Margin="0,3" />
+                <TextBlock Grid.Row="2" Classes="label" Text="TESTE" VerticalAlignment="Center" Margin="0,3" />
+                <TextBlock x:Name="SideStress" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Classes="mono" Text="parado" Margin="0,3" />
+              </Grid>
+            </Border>
+            <TextBlock Classes="label" Text="v0.16 · Linux" Margin="4,10,0,0" />
+          </StackPanel>
 
-    <TabItem Header="Placa de vídeo">
-      <ScrollViewer><TextBlock x:Name="GpuText" FontFamily="monospace" Margin="12" LineHeight="22" /></ScrollViewer>
-    </TabItem>
+          <ListBox x:Name="Nav" Classes="nav" SelectedIndex="0" SelectionChanged="OnNav">
+            <ListBoxItem Tag="PageDash"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="ViewDashboardOutline" Width="18" Height="18" /><TextBlock Text="Visão geral" /></StackPanel></ListBoxItem>
+            <ListBoxItem Tag="PageSystem"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="Laptop" Width="18" Height="18" /><TextBlock Text="Sistema" /></StackPanel></ListBoxItem>
+            <ListBoxItem Tag="PageSensors"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="Thermometer" Width="18" Height="18" /><TextBlock Text="Sensores" /></StackPanel></ListBoxItem>
+            <ListBoxItem Tag="PageGpu"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="ExpansionCardVariant" Width="18" Height="18" /><TextBlock Text="Placa de vídeo" /></StackPanel></ListBoxItem>
+            <ListBoxItem Tag="PageStress"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="FireCircle" Width="18" Height="18" /><TextBlock Text="Stress" /></StackPanel></ListBoxItem>
+            <ListBoxItem Tag="PageBench"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="SpeedometerMedium" Width="18" Height="18" /><TextBlock Text="Bench CPU" /></StackPanel></ListBoxItem>
+            <ListBoxItem Tag="PageSetup"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="ShieldCheckOutline" Width="18" Height="18" /><TextBlock Text="Permissões" /></StackPanel></ListBoxItem>
+          </ListBox>
+        </DockPanel>
+      </Border>
 
-    <TabItem Header="Stress">
-      <StackPanel Margin="16" Spacing="10" MaxWidth="560" HorizontalAlignment="Left">
-        <CheckBox x:Name="StressCpu" IsChecked="True" Content="Carga de CPU (todos os threads)" />
-        <CheckBox x:Name="StressRam" Content="Teste de RAM (grava e verifica padrões em 60% da memória livre)" />
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <TextBlock VerticalAlignment="Center" Text="Parar se a CPU passar de" />
-          <NumericUpDown x:Name="StressLimit" Minimum="60" Maximum="105" Value="95" FormatString="0" Width="110" />
-          <TextBlock VerticalAlignment="Center" Text="°C" />
+      <!-- Páginas -->
+      <Grid Grid.Column="1" Margin="4,14,18,18">
+        <!-- Visão geral -->
+        <StackPanel x:Name="PageDash" Spacing="16">
+          <StackPanel><TextBlock Classes="h1" Text="Visão geral" /><TextBlock x:Name="DashSub" Classes="sub" /></StackPanel>
+          <UniformGrid Columns="3" Rows="1">
+            <Border Classes="card" Margin="0,0,8,0"><StackPanel Spacing="4">
+              <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="Cpu64Bit" Width="16" Height="16" Foreground="{StaticResource Muted}" /><TextBlock Classes="label" Text="PROCESSADOR" /></StackPanel>
+              <TextBlock x:Name="DashCpuLoad" Classes="big" Text="—" />
+              <ProgressBar x:Name="DashCpuBar" Maximum="100" Height="4" />
+              <TextBlock x:Name="DashCpuLine" Classes="mono sub" FontSize="12" />
+            </StackPanel></Border>
+            <Border Classes="card" Margin="4,0"><StackPanel Spacing="4">
+              <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="ExpansionCardVariant" Width="16" Height="16" Foreground="{StaticResource Muted}" /><TextBlock Classes="label" Text="PLACA DE VÍDEO" /></StackPanel>
+              <TextBlock x:Name="DashGpuLoad" Classes="big" Text="—" />
+              <ProgressBar x:Name="DashGpuBar" Maximum="100" Height="4" />
+              <TextBlock x:Name="DashGpuLine" Classes="mono sub" FontSize="12" />
+            </StackPanel></Border>
+            <Border Classes="card" Margin="8,0,0,0"><StackPanel Spacing="4">
+              <StackPanel Orientation="Horizontal" Spacing="8"><mi:MaterialIcon Kind="Memory" Width="16" Height="16" Foreground="{StaticResource Muted}" /><TextBlock Classes="label" Text="MEMÓRIA" /></StackPanel>
+              <TextBlock x:Name="DashRam" Classes="big" Text="—" />
+              <ProgressBar x:Name="DashRamBar" Maximum="100" Height="4" />
+              <TextBlock x:Name="DashRamLine" Classes="mono sub" FontSize="12" />
+            </StackPanel></Border>
+          </UniformGrid>
         </StackPanel>
-        <Button x:Name="StressBtn" Content="Iniciar" Click="OnStress" Width="140" />
-        <TextBlock x:Name="StressInfo" FontFamily="monospace" LineHeight="22" />
-      </StackPanel>
-    </TabItem>
 
-    <TabItem Header="Bench CPU">
-      <DockPanel Margin="12">
-        <StackPanel DockPanel.Dock="Left" Width="280" Spacing="10">
-          <TextBlock Text="Path tracer no estilo Cinebench: nota = amostras/s ÷ 10.000." TextWrapping="Wrap" Opacity="0.75" />
-          <Button x:Name="BenchMulti" Content="Multi-core" Click="OnBenchMulti" />
-          <Button x:Name="BenchSingle" Content="Single-core" Click="OnBenchSingle" />
-          <Button x:Name="BenchStop" Content="Parar" Click="OnBenchStop" IsEnabled="False" />
-          <ProgressBar x:Name="BenchBar" Minimum="0" Maximum="1" />
-          <TextBlock x:Name="BenchInfo" FontFamily="monospace" TextWrapping="Wrap" LineHeight="22" />
+        <DockPanel x:Name="PageSystem" IsVisible="False">
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Sistema" /><TextBlock Classes="sub" Text="Lido de /proc, /sys e DMI" /></StackPanel>
+          <Border Classes="card"><TreeView x:Name="SysTree" Background="Transparent" /></Border>
+        </DockPanel>
+
+        <DockPanel x:Name="PageSensors" IsVisible="False">
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Sensores" /><TextBlock x:Name="SensorCount" Classes="sub" /></StackPanel>
+          <Border Classes="card"><ScrollViewer><TextBlock x:Name="SensorText" Classes="mono" FontSize="12.5" LineHeight="20" /></ScrollViewer></Border>
+        </DockPanel>
+
+        <DockPanel x:Name="PageGpu" IsVisible="False">
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Placa de vídeo" /><TextBlock Classes="sub" Text="Driver amdgpu" /></StackPanel>
+          <Border Classes="card"><ScrollViewer><TextBlock x:Name="GpuText" Classes="mono" LineHeight="22" /></ScrollViewer></Border>
+        </DockPanel>
+
+        <DockPanel x:Name="PageStress" IsVisible="False">
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Stress" /><TextBlock Classes="sub" Text="Carga sintética de CPU e RAM, com parada automática" /></StackPanel>
+          <Border Classes="card" VerticalAlignment="Top" MaxWidth="620" HorizontalAlignment="Left">
+            <StackPanel Spacing="12">
+              <CheckBox x:Name="StressCpu" IsChecked="True" Content="Carga de CPU (todos os threads)" />
+              <CheckBox x:Name="StressRam" Content="Teste de RAM (grava e verifica padrões em 60% da memória livre)" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock VerticalAlignment="Center" Text="Parar se a CPU passar de" />
+                <NumericUpDown x:Name="StressLimit" Minimum="60" Maximum="105" Value="95" FormatString="0" Width="120" />
+                <TextBlock VerticalAlignment="Center" Text="°C" />
+              </StackPanel>
+              <Button x:Name="StressBtn" Classes="primary" Content="INICIAR" Click="OnStress" HorizontalAlignment="Left" />
+              <TextBlock x:Name="StressInfo" Classes="mono" LineHeight="22" />
+            </StackPanel>
+          </Border>
+        </DockPanel>
+
+        <DockPanel x:Name="PageBench" IsVisible="False">
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Bench CPU" /><TextBlock Classes="sub" Text="Path tracer no estilo Cinebench · nota = amostras/s ÷ 10.000" /></StackPanel>
+          <Border Classes="card" DockPanel.Dock="Left" Width="280" Margin="0,0,12,0" VerticalAlignment="Top">
+            <StackPanel Spacing="10">
+              <Button x:Name="BenchMulti" Classes="primary" Content="MULTI-CORE" Click="OnBenchMulti" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+              <Button x:Name="BenchSingle" Classes="ghost" Content="SINGLE-CORE" Click="OnBenchSingle" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+              <Button x:Name="BenchStop" Classes="ghost" Content="PARAR" Click="OnBenchStop" IsEnabled="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+              <ProgressBar x:Name="BenchBar" Minimum="0" Maximum="1" Height="4" />
+              <TextBlock x:Name="BenchInfo" Classes="mono" TextWrapping="Wrap" LineHeight="22" />
+            </StackPanel>
+          </Border>
+          <Border Classes="card" Padding="8"><Image x:Name="BenchImg" Stretch="Uniform" /></Border>
+        </DockPanel>
+
+        <DockPanel x:Name="PageSetup" IsVisible="False">
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Permissões" /><TextBlock Classes="sub" Text="O que o app precisa para ler e ajustar o hardware" /></StackPanel>
+          <Border Classes="card" VerticalAlignment="Top"><StackPanel x:Name="SetupListPage" Spacing="10" /></Border>
+        </DockPanel>
+      </Grid>
+    </Grid>
+
+    <!-- Tela de configuração inicial: cobre tudo e trava o app até as permissões serem concedidas -->
+    <Grid x:Name="Gate" Background="{StaticResource Bg}" IsVisible="False">
+      <Border Classes="card" Width="620" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="30,26">
+        <StackPanel Spacing="16">
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <Image Source="avares://resetexplode/Assets/logo.png" Width="30" Height="30" />
+            <TextBlock FontSize="20" VerticalAlignment="Center"><Run Text="RESET" FontWeight="Bold" /><Run Text=" EXPLODE" FontWeight="Light" /></TextBlock>
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Classes="h1" FontSize="22" Text="Configuração inicial" />
+            <TextBlock Classes="sub" TextWrapping="Wrap" Text="Para ler o consumo da CPU e ajustar a placa de vídeo AMD, o app precisa de permissão. Isso é feito uma vez: um script libera o acesso só para o seu grupo (wheel)." />
+          </StackPanel>
+          <StackPanel x:Name="GateList" Spacing="10" />
+          <Border Background="#050505" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="12" Padding="12" Height="150" IsVisible="False" x:Name="GateLogBox">
+            <ScrollViewer x:Name="GateScroll"><TextBlock x:Name="GateLog" Classes="mono" FontSize="12" TextWrapping="Wrap" /></ScrollViewer>
+          </Border>
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+            <Button Classes="ghost" Content="SAIR" Click="OnGateExit" />
+            <Button x:Name="GateGo" Classes="primary" Content="CONCEDER PERMISSÕES" Click="OnGateGo" />
+          </StackPanel>
         </StackPanel>
-        <Image x:Name="BenchImg" Margin="12,0,0,0" Stretch="Uniform" />
-      </DockPanel>
-    </TabItem>
-  </TabControl>
+      </Border>
+    </Grid>
+  </Grid>
 </Window>
