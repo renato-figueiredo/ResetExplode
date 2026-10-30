@@ -28,7 +28,7 @@
                 <TextBlock x:Name="SideStress" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Classes="mono" Text="parado" Margin="0,3" />
               </Grid>
             </Border>
-            <TextBlock Classes="label" Text="v0.16 · Linux" Margin="4,10,0,0" />
+            <TextBlock x:Name="SideVersion" Classes="label" Text="Linux" Margin="4,10,0,0" />
           </StackPanel>
 
           <ListBox x:Name="Nav" Classes="nav" SelectedIndex="0" SelectionChanged="OnNav">

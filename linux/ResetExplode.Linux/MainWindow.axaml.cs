@@ -26,6 +26,9 @@ public partial class MainWindow : Window
         _ready = true;
         RefreshSetup();
         Title = $"RESET EXPLODE — {Sys.OsName()}";
+        var ver = typeof(MainWindow).Assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+            .OfType<System.Reflection.AssemblyInformationalVersionAttribute>().FirstOrDefault()?.InformationalVersion?.Split('+')[0];
+        SideVersion.Text = $"v{ver} · Linux";
         // --pagina=gpu abre direto numa tela (visao, sistema, sensores, gpu, stress, bench, permissoes)
         var arg = Environment.GetCommandLineArgs().FirstOrDefault(a => a.StartsWith("--pagina="))?[9..];
         int idx = Array.FindIndex(new[] { "visao", "sistema", "sensores", "gpu", "stress", "bench", "permissoes" }, x => x == arg);
