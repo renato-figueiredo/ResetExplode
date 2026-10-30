@@ -11,7 +11,7 @@ public static class Setup
     private static bool CanRead(string p) { try { using var f = File.OpenRead(p); f.ReadByte(); return true; } catch { return false; } }
     private static bool CanWrite(string p) { try { using var f = new FileStream(p, FileMode.Open, FileAccess.Write, FileShare.ReadWrite); return true; } catch { return false; } }
     // Dentro de um distrobox, ferramentas e pkexec precisam rodar no host para valerem de verdade.
-    private static readonly bool InContainer = File.Exists("/run/.containerenv");
+    internal static readonly bool InContainer = File.Exists("/run/.containerenv");
 
     private static bool Has(string tool)
     {
