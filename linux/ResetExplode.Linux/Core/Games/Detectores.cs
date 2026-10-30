@@ -59,16 +59,23 @@ public static class SteamSource
         return res;
     }
 
-    /// <summary>Capa vertical do cache da Steam; se não houver, o cabeçalho horizontal.</summary>
+    /// <summary>
+    /// Melhor capa vertical do cache da Steam: 600x900, depois a cápsula vertical (300x450) e, só em último caso,
+    /// o cabeçalho horizontal. Nunca um .jpg qualquer da pasta (há ícones de 32x32 ali).
+    /// </summary>
     private static string? LocalCover(string root, string appId)
     {
         string d = Path.Combine(root, "appcache", "librarycache", appId);
         if (!Directory.Exists(d)) return null;
-        foreach (var n in new[] { "library_600x900.jpg", "header.jpg" })
+        foreach (var n in new[] { "library_600x900.jpg", "library_capsule.jpg" })
             if (File.Exists(Path.Combine(d, n))) return Path.Combine(d, n);
         // versões novas guardam em subpastas com hash
-        return Directory.GetFiles(d, "library_600x900*.jpg", SearchOption.AllDirectories).FirstOrDefault()
-            ?? Directory.GetFiles(d, "*.jpg", SearchOption.AllDirectories).FirstOrDefault();
+        var nested = Directory.GetFiles(d, "library_600x900*.jpg", SearchOption.AllDirectories).FirstOrDefault()
+                  ?? Directory.GetFiles(d, "library_capsule*.jpg", SearchOption.AllDirectories).FirstOrDefault();
+        if (nested != null) return nested;
+        foreach (var n in new[] { "library_header.jpg", "header.jpg" })
+            if (File.Exists(Path.Combine(d, n))) return Path.Combine(d, n);
+        return null;
     }
 }
 
