@@ -10,15 +10,32 @@ public static class Setup
 {
     private static bool CanRead(string p) { try { using var f = File.OpenRead(p); f.ReadByte(); return true; } catch { return false; } }
     private static bool CanWrite(string p) { try { using var f = new FileStream(p, FileMode.Open, FileAccess.Write, FileShare.ReadWrite); return true; } catch { return false; } }
-    private static bool Has(string tool) =>
-        (Environment.GetEnvironmentVariable("PATH") ?? "").Split(':').Any(d => File.Exists(Path.Combine(d, tool)));
+    // Dentro de um distrobox, ferramentas e pkexec precisam rodar no host para valerem de verdade.
+    internal static readonly bool InContainer = File.Exists("/run/.containerenv");
+
+    private static bool Has(string tool)
+    {
+        if (!InContainer)
+            return (Environment.GetEnvironmentVariable("PATH") ?? "").Split(':').Any(d => File.Exists(Path.Combine(d, tool)));
+        try
+        {
+            var psi = new ProcessStartInfo("distrobox-host-exec") { RedirectStandardOutput = true, UseShellExecute = false };
+            foreach (var a in new[] { "sh", "-c", $"command -v {tool}" }) psi.ArgumentList.Add(a);
+            using var p = Process.Start(psi)!;
+            p.WaitForExit(5000);
+            return p.HasExited && p.ExitCode == 0;
+        }
+        catch { return false; }
+    }
 
     public static List<SetupCheck> Checks()
     {
         var res = new List<SetupCheck>();
 
-        var rapl = Directory.Exists("/sys/class/powercap")
-            ? Directory.GetFiles("/sys/devices/virtual/powercap", "energy_uj", SearchOption.AllDirectories).ToList() : new();
+        // sysfs tem laços de symlink: sem pular links a busca recursiva nunca termina
+        var skipLinks = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint, MaxRecursionDepth = 4 };
+        var rapl = Directory.Exists("/sys/devices/virtual/powercap")
+            ? Directory.GetFiles("/sys/devices/virtual/powercap", "energy_uj", skipLinks).ToList() : new();
         res.Add(new("Consumo da CPU (RAPL)", rapl.Count == 0 ? "Não disponível neste hardware — nada a fazer."
             : "Leitura de energy_uj para mostrar a potência da CPU.", rapl.Count == 0 || rapl.All(CanRead), true));
 
@@ -45,7 +62,8 @@ public static class Setup
     /// <summary>Executa o script embutido como root. Cada linha de saída chega em <paramref name="log"/>.</summary>
     public static async Task<int> RunAsync(Action<string> log)
     {
-        var psi = new ProcessStartInfo("pkexec") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+        var psi = new ProcessStartInfo(InContainer ? "distrobox-host-exec" : "pkexec") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+        if (InContainer) psi.ArgumentList.Add("pkexec");
         psi.ArgumentList.Add("/usr/bin/bash");
         psi.ArgumentList.Add("-c");
         psi.ArgumentList.Add(Script());

@@ -28,7 +28,7 @@
                 <TextBlock x:Name="SideStress" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Classes="mono" Text="parado" Margin="0,3" />
               </Grid>
             </Border>
-            <TextBlock Classes="label" Text="v0.16 · Linux" Margin="4,10,0,0" />
+            <TextBlock x:Name="SideVersion" Classes="label" Text="Linux" Margin="4,10,0,0" />
           </StackPanel>
 
           <ListBox x:Name="Nav" Classes="nav" SelectedIndex="0" SelectionChanged="OnNav">
@@ -36,6 +36,8 @@
             <ListBoxItem Tag="PageSystem"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="Laptop" Width="18" Height="18" /><TextBlock Text="Sistema" /></StackPanel></ListBoxItem>
             <ListBoxItem Tag="PageSensors"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="Thermometer" Width="18" Height="18" /><TextBlock Text="Sensores" /></StackPanel></ListBoxItem>
             <ListBoxItem Tag="PageGpu"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="ExpansionCardVariant" Width="18" Height="18" /><TextBlock Text="Placa de vídeo" /></StackPanel></ListBoxItem>
+            <ListBoxItem Tag="PageGames"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="GamepadVariantOutline" Width="18" Height="18" /><TextBlock Text="Jogos" /></StackPanel></ListBoxItem>
+            <ListBoxItem Tag="PageCompat"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="BookOpenPageVariantOutline" Width="18" Height="18" /><TextBlock Text="Compatibilidade" /></StackPanel></ListBoxItem>
             <ListBoxItem Tag="PageStress"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="FireCircle" Width="18" Height="18" /><TextBlock Text="Stress" /></StackPanel></ListBoxItem>
             <ListBoxItem Tag="PageBench"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="SpeedometerMedium" Width="18" Height="18" /><TextBlock Text="Bench CPU" /></StackPanel></ListBoxItem>
             <ListBoxItem Tag="PageSetup"><StackPanel Orientation="Horizontal" Spacing="12"><mi:MaterialIcon Kind="ShieldCheckOutline" Width="18" Height="18" /><TextBlock Text="Permissões" /></StackPanel></ListBoxItem>
@@ -71,18 +73,51 @@
         </StackPanel>
 
         <DockPanel x:Name="PageSystem" IsVisible="False">
-          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Sistema" /><TextBlock Classes="sub" Text="Lido de /proc, /sys e DMI" /></StackPanel>
-          <Border Classes="card"><TreeView x:Name="SysTree" Background="Transparent" /></Border>
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Sistema" /><TextBlock Classes="sub" Text="Lido de /proc, /sys e DMI — sem precisar de root" /></StackPanel>
+          <ScrollViewer><StackPanel x:Name="SysPanel" Spacing="12" Margin="0,0,12,0" /></ScrollViewer>
         </DockPanel>
 
         <DockPanel x:Name="PageSensors" IsVisible="False">
-          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Sensores" /><TextBlock x:Name="SensorCount" Classes="sub" /></StackPanel>
-          <Border Classes="card"><ScrollViewer><TextBlock x:Name="SensorText" Classes="mono" FontSize="12.5" LineHeight="20" /></ScrollViewer></Border>
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10"><TextBlock Classes="h1" Text="Sensores" /><TextBlock x:Name="SensorCount" Classes="sub" /></StackPanel>
+          <WrapPanel x:Name="SensorNav" DockPanel.Dock="Top" Margin="0,0,0,10" />
+          <ScrollViewer><StackPanel x:Name="SensorPanel" Spacing="12" Margin="0,0,12,0" /></ScrollViewer>
         </DockPanel>
 
         <DockPanel x:Name="PageGpu" IsVisible="False">
-          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Placa de vídeo" /><TextBlock Classes="sub" Text="Driver amdgpu" /></StackPanel>
-          <Border Classes="card"><ScrollViewer><TextBlock x:Name="GpuText" Classes="mono" LineHeight="22" /></ScrollViewer></Border>
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Placa de vídeo" /><TextBlock Classes="sub" Text="Driver amdgpu · atualiza a cada 1 s" /></StackPanel>
+          <ScrollViewer><StackPanel x:Name="GpuPanel" Spacing="12" Margin="0,0,12,0" /></ScrollViewer>
+        </DockPanel>
+
+        <DockPanel x:Name="PageGames" IsVisible="False">
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+            <TextBlock Classes="h1" Text="Jogos" />
+            <TextBlock x:Name="GamesInfo" Classes="sub" Text="Steam, Epic, GOG, Heroic, Lutris e pastas" />
+          </StackPanel>
+          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,10">
+            <TextBox x:Name="GamesSearch" Width="260" Watermark="Buscar jogo…" TextChanged="OnGamesSearch" />
+            <Button Classes="ghost" Content="ATUALIZAR" Click="OnGamesRefresh" />
+            <Button Classes="ghost" Content="ADICIONAR PASTA" Click="OnGamesAddFolder" />
+            <Button Classes="ghost" Content="CAPAS (SteamGridDB)" Click="OnGamesKey" />
+          </StackPanel>
+          <Border x:Name="GamesKeyBox" DockPanel.Dock="Top" Classes="card" Margin="0,0,0,10" IsVisible="False">
+            <StackPanel Spacing="8">
+              <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Muted}" Text="Jogos da Steam, Epic e GOG já trazem capa. Para os demais, cole uma chave gratuita do SteamGridDB (steamgriddb.com → Preferências → API). Sem chave, eles aparecem com a inicial do nome." />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBox x:Name="GamesKeyText" Width="360" PasswordChar="•" Watermark="Chave da API" />
+                <Button Classes="primary" Content="SALVAR" Click="OnGamesKeySave" />
+                <Button Classes="ghost" Content="ABRIR SITE DA CHAVE" Click="OnGamesKeySite" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <ScrollViewer><WrapPanel x:Name="GameGrid" Margin="0,0,8,0" /></ScrollViewer>
+        </DockPanel>
+
+        <DockPanel x:Name="PageCompat" IsVisible="False">
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+            <TextBlock Classes="h1" Text="Compatibilidade" />
+            <TextBlock Classes="sub" Text="Onde conferir se um jogo roda no Linux, e o que fazer quando não roda" />
+          </StackPanel>
+          <ScrollViewer><StackPanel x:Name="CompatPanel" Spacing="12" Margin="0,0,12,0" /></ScrollViewer>
         </DockPanel>
 
         <DockPanel x:Name="PageStress" IsVisible="False">

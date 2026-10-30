@@ -19,6 +19,7 @@
     <Compile Include="..\..\BenchRenderer.cs" Link="Shared\BenchRenderer.cs" />
     <Compile Include="..\..\GameSimBench.cs" Link="Shared\GameSimBench.cs" />
     <Compile Include="..\..\InfoNode.cs" Link="Shared\InfoNode.cs" />
+    <Compile Include="..\..\Vdf.cs" Link="Shared\Vdf.cs" />
     <Compile Include="..\..\StressTester.cs" Link="Shared\StressTester.cs" />
   </ItemGroup>
 
@@ -27,10 +28,11 @@
     <PackageReference Include="Avalonia.Desktop" Version="11.3.*" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.*" />
     <PackageReference Include="Material.Icons.Avalonia" Version="2.1.*" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.*" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.*" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="setup\resetexplode-setup.sh" LogicalName="resetexplode-setup.sh" />
+    <EmbeddedResource Include="Scripts\resetexplode-setup.sh" LogicalName="resetexplode-setup.sh" />
     <AvaloniaResource Include="Assets\*.png" />
   </ItemGroup>
 </Project>
