@@ -1,0 +1,49 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ResetExplode.Linux.MainWindow"
+        Title="RESET EXPLODE — Linux" Width="1100" Height="720" MinWidth="800" MinHeight="500">
+  <TabControl Margin="6">
+    <TabItem Header="Sistema">
+      <TreeView x:Name="SysTree" />
+    </TabItem>
+
+    <TabItem Header="Sensores">
+      <DockPanel>
+        <TextBlock x:Name="SensorCount" DockPanel.Dock="Top" Margin="8" Opacity="0.7" />
+        <ScrollViewer><TextBlock x:Name="SensorText" FontFamily="monospace" Margin="8" /></ScrollViewer>
+      </DockPanel>
+    </TabItem>
+
+    <TabItem Header="Placa de vídeo">
+      <ScrollViewer><TextBlock x:Name="GpuText" FontFamily="monospace" Margin="12" LineHeight="22" /></ScrollViewer>
+    </TabItem>
+
+    <TabItem Header="Stress">
+      <StackPanel Margin="16" Spacing="10" MaxWidth="560" HorizontalAlignment="Left">
+        <CheckBox x:Name="StressCpu" IsChecked="True" Content="Carga de CPU (todos os threads)" />
+        <CheckBox x:Name="StressRam" Content="Teste de RAM (grava e verifica padrões em 60% da memória livre)" />
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock VerticalAlignment="Center" Text="Parar se a CPU passar de" />
+          <NumericUpDown x:Name="StressLimit" Minimum="60" Maximum="105" Value="95" FormatString="0" Width="110" />
+          <TextBlock VerticalAlignment="Center" Text="°C" />
+        </StackPanel>
+        <Button x:Name="StressBtn" Content="Iniciar" Click="OnStress" Width="140" />
+        <TextBlock x:Name="StressInfo" FontFamily="monospace" LineHeight="22" />
+      </StackPanel>
+    </TabItem>
+
+    <TabItem Header="Bench CPU">
+      <DockPanel Margin="12">
+        <StackPanel DockPanel.Dock="Left" Width="280" Spacing="10">
+          <TextBlock Text="Path tracer no estilo Cinebench: nota = amostras/s ÷ 10.000." TextWrapping="Wrap" Opacity="0.75" />
+          <Button x:Name="BenchMulti" Content="Multi-core" Click="OnBenchMulti" />
+          <Button x:Name="BenchSingle" Content="Single-core" Click="OnBenchSingle" />
+          <Button x:Name="BenchStop" Content="Parar" Click="OnBenchStop" IsEnabled="False" />
+          <ProgressBar x:Name="BenchBar" Minimum="0" Maximum="1" />
+          <TextBlock x:Name="BenchInfo" FontFamily="monospace" TextWrapping="Wrap" LineHeight="22" />
+        </StackPanel>
+        <Image x:Name="BenchImg" Margin="12,0,0,0" Stretch="Uniform" />
+      </DockPanel>
+    </TabItem>
+  </TabControl>
+</Window>

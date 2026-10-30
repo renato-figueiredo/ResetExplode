@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <RootNamespace>ResetExplode.Linux</RootNamespace>
+    <AssemblyName>resetexplode</AssemblyName>
+    <Version>0.16.0-linux1</Version>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <!-- Lógica sem dependência do Windows, compartilhada com o app original (namespace ResetExplode). -->
+  <ItemGroup>
+    <Compile Include="..\..\BenchRenderer.cs" Link="Shared\BenchRenderer.cs" />
+    <Compile Include="..\..\GameSimBench.cs" Link="Shared\GameSimBench.cs" />
+    <Compile Include="..\..\InfoNode.cs" Link="Shared\InfoNode.cs" />
+    <Compile Include="..\..\StressTester.cs" Link="Shared\StressTester.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.*" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.*" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.*" />
+    <PackageReference Include="Material.Icons.Avalonia" Version="2.1.*" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="setup\resetexplode-setup.sh" LogicalName="resetexplode-setup.sh" />
+    <AvaloniaResource Include="Assets\*.png" />
+  </ItemGroup>
+</Project>
