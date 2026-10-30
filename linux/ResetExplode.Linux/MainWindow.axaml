@@ -71,18 +71,18 @@
         </StackPanel>
 
         <DockPanel x:Name="PageSystem" IsVisible="False">
-          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Sistema" /><TextBlock Classes="sub" Text="Lido de /proc, /sys e DMI" /></StackPanel>
-          <Border Classes="card"><TreeView x:Name="SysTree" Background="Transparent" /></Border>
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Sistema" /><TextBlock Classes="sub" Text="Lido de /proc, /sys e DMI — sem precisar de root" /></StackPanel>
+          <ScrollViewer><StackPanel x:Name="SysPanel" Spacing="12" Margin="0,0,12,0" /></ScrollViewer>
         </DockPanel>
 
         <DockPanel x:Name="PageSensors" IsVisible="False">
           <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Sensores" /><TextBlock x:Name="SensorCount" Classes="sub" /></StackPanel>
-          <Border Classes="card"><ScrollViewer><TextBlock x:Name="SensorText" Classes="mono" FontSize="12.5" LineHeight="20" /></ScrollViewer></Border>
+          <ScrollViewer><StackPanel x:Name="SensorPanel" Spacing="12" Margin="0,0,12,0" /></ScrollViewer>
         </DockPanel>
 
         <DockPanel x:Name="PageGpu" IsVisible="False">
-          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Placa de vídeo" /><TextBlock Classes="sub" Text="Driver amdgpu" /></StackPanel>
-          <Border Classes="card"><ScrollViewer><TextBlock x:Name="GpuText" Classes="mono" LineHeight="22" /></ScrollViewer></Border>
+          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12"><TextBlock Classes="h1" Text="Placa de vídeo" /><TextBlock Classes="sub" Text="Driver amdgpu · atualiza a cada 1 s" /></StackPanel>
+          <ScrollViewer><StackPanel x:Name="GpuPanel" Spacing="12" Margin="0,0,12,0" /></ScrollViewer>
         </DockPanel>
 
         <DockPanel x:Name="PageStress" IsVisible="False">

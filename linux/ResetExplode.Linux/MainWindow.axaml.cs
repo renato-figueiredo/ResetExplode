@@ -25,9 +25,11 @@ public partial class MainWindow : Window
         InitializeComponent();
         _ready = true;
         RefreshSetup();
-        SysTree.ItemsSource = Sys.Overview().Children;
-        SysTree.ItemTemplate = new Avalonia.Controls.Templates.FuncTreeDataTemplate<InfoNode>(
-            (n, _) => new TextBlock { Text = n.Display, Margin = new Thickness(0, 2) }, n => n.Children);
+        Title = $"RESET EXPLODE — {Sys.OsName()}";
+        // --pagina=gpu abre direto numa tela (visao, sistema, sensores, gpu, stress, bench, permissoes)
+        var arg = Environment.GetCommandLineArgs().FirstOrDefault(a => a.StartsWith("--pagina="))?[9..];
+        int idx = Array.FindIndex(new[] { "visao", "sistema", "sensores", "gpu", "stress", "bench", "permissoes" }, x => x == arg);
+        if (idx >= 0) Nav.SelectedIndex = idx;
         _timer.Tick += (_, _) => Tick();
         _timer.Start();
         Tick();
@@ -41,6 +43,117 @@ public partial class MainWindow : Window
         if (!_ready || (s as ListBox)?.SelectedItem is not ListBoxItem it) return;
         foreach (var name in Pages)
             if (this.FindControl<Control>(name) is { } page) page.IsVisible = name == (string?)it.Tag;
+    }
+
+    // ---------------------------------------------------------------- Sistema
+
+    private readonly Dictionary<string, LiveCard> _sysCards = new();
+
+    private void UpdateSystem()
+    {
+        foreach (var group in Sys.Overview().Children)
+        {
+            if (!_sysCards.TryGetValue(group.Header, out var card))
+            {
+                _sysCards[group.Header] = card = new LiveCard(group.Header);
+                SysPanel.Children.Add(card.Root);
+            }
+            foreach (var row in group.Children) card.Set(row.Header, row.Header, row.Value);
+        }
+    }
+
+    // ---------------------------------------------------------------- Placa de vídeo
+
+    private readonly Dictionary<string, LiveCard> _gpuCards = new();
+
+    private void UpdateGpus()
+    {
+        if (_gpus.Count == 0 && !_gpuCards.ContainsKey("none"))
+        {
+            var c = new LiveCard("Nenhuma GPU AMD encontrada", "amdgpu");
+            c.Set("msg", "Driver", "O driver amdgpu não expôs nenhuma placa em /sys/class/drm.");
+            _gpuCards["none"] = c; GpuPanel.Children.Add(c.Root);
+        }
+        foreach (var g in _gpus.OrderBy(x => x.IsIntegrated))
+        {
+            if (!_gpuCards.TryGetValue(g.Card, out var c))
+            {
+                _gpuCards[g.Card] = c = new LiveCard(g.Name, $"{(g.IsIntegrated ? "INTEGRADA" : "DEDICADA")} · {g.Card}");
+                GpuPanel.Children.Add(c.Root);
+            }
+            c.Bar("busy", "Uso da GPU", g.Busy, g.Busy is double b ? $"{b:F0} %" : "—");
+            c.Bar("vram", "Memória de vídeo", g.VramTotalGb > 0 ? 100 * g.VramUsedGb / g.VramTotalGb : null,
+                $"{g.VramUsedGb:F2} de {g.VramTotalGb:F1} GB");
+            c.Bar("power", "Consumo", g.PowerW is double w && g.PowerCapW is double cap && cap > 0 ? 100 * w / cap : null,
+                g.PowerW is double pw ? $"{pw:F0} W" + (g.PowerCapW is double pc ? $" de {pc:F0} W" : "") : "—");
+            c.Separator("Clocks");
+            c.Set("sclk", "Núcleo", g.Clock("pp_dpm_sclk"));
+            c.Set("mclk", "Memória", g.Clock("pp_dpm_mclk"));
+            c.Set("pcie", "Barramento", g.Pcie);
+            c.Separator("Temperaturas");
+            c.Set("tedge", "Borda", g.TempEdge is double e ? $"{e:F0} °C" : "—");
+            c.Set("tjunc", "Hotspot", g.TempJunction is double j ? $"{j:F0} °C" : "—");
+            c.Set("tmem", "Memória", g.TempMem is double m ? $"{m:F0} °C" : "—");
+            c.Set("fan", "Ventoinha", g.FanRpm is double f ? (f > 0 ? $"{f:F0} RPM" : "parada") : "—");
+            c.Separator("Driver");
+            c.Set("drv", "Driver", "amdgpu (kernel)");
+            c.Set("perf", "Nível de desempenho", g.PerfLevel);
+        }
+    }
+
+    // ---------------------------------------------------------------- Sensores
+
+    private readonly Dictionary<string, LiveCard> _sensorCards = new();
+
+    private static readonly Dictionary<string, string> SensorLabels = new()
+    {
+        ["edge"] = "Borda", ["junction"] = "Hotspot", ["mem"] = "Memória", ["Composite"] = "Temperatura geral",
+        ["Tctl"] = "Núcleo (Tctl)", ["Tdie"] = "Núcleo (Tdie)", ["Tccd1"] = "CCD 1", ["Tccd2"] = "CCD 2",
+        ["vddgfx"] = "Tensão do núcleo", ["vddnb"] = "Tensão do SoC", ["PPT"] = "Consumo (PPT)", ["fan1"] = "Ventoinha",
+        ["temp1"] = "Temperatura", ["Package id 0"] = "Pacote",
+    };
+
+    /// <summary>Nome legível de cada chip do hwmon; amdgpu usa o nome real da placa e módulos repetidos ganham número.</summary>
+    private string ChipTitle(string chip, string hwmonPath, Dictionary<string, int> seen)
+    {
+        seen[chip] = seen.GetValueOrDefault(chip) + 1;
+        int n = seen[chip];
+        string id = Path.GetFileName(hwmonPath);
+        return chip switch
+        {
+            "amdgpu" => _gpus.FirstOrDefault(g => Path.GetFileName(g.Hwmon) == id)?.Name is { } nm ? nm : $"Placa de vídeo AMD {n}",
+            "k10temp" => "Processador AMD (k10temp)",
+            "coretemp" => "Processador Intel (coretemp)",
+            "nvme" => $"SSD NVMe{(n > 1 ? " " + n : "")}",
+            "spd5118" => $"Módulo de RAM DDR5 — slot {n}",
+            "asus" or "asus_wmi_sensors" => "Placa-mãe ASUS",
+            "zenergy" => "Consumo do processador (zenergy)",
+            var c when c.StartsWith("mt79") => "Wi-Fi MediaTek " + c.Split('_')[0].ToUpperInvariant(),
+            var c => c,
+        };
+    }
+
+    private void UpdateSensors(List<SensorReading> all)
+    {
+        SensorCount.Text = $"{all.Count} sensores em {all.Select(s => s.Chip).Distinct().Count()} chips — atualiza a cada 1 s";
+        var seen = new Dictionary<string, int>();
+        foreach (var g in all.GroupBy(s => s.Chip))
+        {
+            var first = g.First();
+            string title = ChipTitle(first.Hardware, g.Key, seen);
+            if (!_sensorCards.TryGetValue(g.Key, out var card))
+            {
+                _sensorCards[g.Key] = card = new LiveCard(title, first.Hardware);
+                SensorPanel.Children.Add(card.Root);
+            }
+            foreach (var s in g)
+            {
+                string label = SensorLabels.GetValueOrDefault(s.Name, s.Name);
+                if (s.Name == "temp1" && s.Kind == "Temperatura" && g.Count(x => x.Kind == "Temperatura") > 1) label = "Temperatura " + s.Id[^1];
+                string val = s.Unit == "RPM" ? $"{s.Value:F0} RPM" : s.Unit is "V" ? $"{s.Value:F2} V" : $"{s.Value:F1} {s.Unit}";
+                card.Set(s.Id, label, val);
+            }
+        }
     }
 
     // ---------------------------------------------------------------- Permissões
@@ -107,24 +220,15 @@ public partial class MainWindow : Window
     private void Tick()
     {
         var all = Hwmon.ReadAll();
-        SensorCount.Text = $"{all.Count} sensores — atualiza a cada 1 s";
-        var sb = new StringBuilder();
-        foreach (var g in all.GroupBy(s => s.Hardware))
-        {
-            sb.AppendLine($"[{g.Key}]");
-            foreach (var s in g) sb.AppendLine($"  {s.Kind,-12} {s.Name,-28} {s.Value,10:F1} {s.Unit}");
-            sb.AppendLine();
-        }
-        SensorText.Text = sb.ToString();
-
-        GpuText.Text = _gpus.Count == 0 ? "Nenhuma GPU AMD encontrada (amdgpu)."
-            : string.Join("\n──────────\n", _gpus.OrderBy(g => g.IsIntegrated).Select(g => g.Details()));
+        UpdateSensors(all);
+        UpdateGpus();
+        UpdateSystem();
 
         double load = Sys.CpuLoad(), temp = CpuTemp(all) ?? 0;
         var gpu = _gpus.OrderBy(g => g.IsIntegrated).FirstOrDefault();
         var (memTotal, memAvail) = Sys.Mem();
         double ramPct = memTotal == 0 ? 0 : 100.0 * (memTotal - memAvail) / memTotal;
-        DashSub.Text = $"{Sys.OsName()} · kernel {Sys.Kernel()}";
+        DashSub.Text = $"{Sys.OsName()} · kernel {Sys.Kernel()} · ligado há {Sys.Uptime()}";
         DashCpuLoad.Text = $"{load:F0} %"; DashCpuBar.Value = load;
         DashCpuLine.Text = $"{temp:F0} °C · {Sys.CpuCurrentMhz():F0} MHz";
         DashGpuLoad.Text = gpu?.Busy is double gb ? $"{gb:F0} %" : "—"; DashGpuBar.Value = gpu?.Busy ?? 0;
