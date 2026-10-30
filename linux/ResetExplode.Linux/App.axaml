@@ -1,0 +1,70 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             x:Class="ResetExplode.Linux.App"
+             RequestedThemeVariant="Dark">
+  <Application.Resources>
+    <!-- Paleta monocromática do app original -->
+    <SolidColorBrush x:Key="Bg">#000000</SolidColorBrush>
+    <SolidColorBrush x:Key="Panel">#080808</SolidColorBrush>
+    <SolidColorBrush x:Key="Card">#0E0E0E</SolidColorBrush>
+    <SolidColorBrush x:Key="Hover">#181818</SolidColorBrush>
+    <SolidColorBrush x:Key="Line">#1F1F1F</SolidColorBrush>
+    <SolidColorBrush x:Key="Fg">#F5F5F5</SolidColorBrush>
+    <SolidColorBrush x:Key="Muted">#8C8C8C</SolidColorBrush>
+    <SolidColorBrush x:Key="Faint">#4A4A4A</SolidColorBrush>
+    <FontFamily x:Key="Mono">Cascadia Mono, JetBrains Mono, DejaVu Sans Mono, monospace</FontFamily>
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme />
+    <mi:MaterialIconStyles />
+
+    <Style Selector="Window"><Setter Property="Background" Value="{StaticResource Bg}" /></Style>
+    <Style Selector="TextBlock"><Setter Property="Foreground" Value="{StaticResource Fg}" /></Style>
+    <Style Selector="TextBlock.h1"><Setter Property="FontSize" Value="26" /><Setter Property="FontWeight" Value="SemiBold" /></Style>
+    <Style Selector="TextBlock.sub"><Setter Property="Foreground" Value="{StaticResource Muted}" /><Setter Property="Margin" Value="0,4,0,0" /></Style>
+    <Style Selector="TextBlock.label"><Setter Property="FontSize" Value="10.5" /><Setter Property="FontWeight" Value="SemiBold" /><Setter Property="Foreground" Value="{StaticResource Faint}" /></Style>
+    <Style Selector="TextBlock.mono"><Setter Property="FontFamily" Value="{StaticResource Mono}" /></Style>
+    <Style Selector="TextBlock.big"><Setter Property="FontSize" Value="30" /><Setter Property="FontWeight" Value="SemiBold" /><Setter Property="FontFamily" Value="{StaticResource Mono}" /></Style>
+
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{StaticResource Card}" />
+      <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="16" />
+      <Setter Property="Padding" Value="18,14" />
+    </Style>
+
+    <!-- Menu lateral -->
+    <Style Selector="ListBox.nav"><Setter Property="Background" Value="Transparent" /><Setter Property="Padding" Value="8" /></Style>
+    <Style Selector="ListBox.nav ListBoxItem">
+      <Setter Property="Padding" Value="12,10" />
+      <Setter Property="Margin" Value="0,2" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+    </Style>
+    <Style Selector="ListBox.nav ListBoxItem:pointerover /template/ ContentPresenter"><Setter Property="Background" Value="{StaticResource Hover}" /></Style>
+    <Style Selector="ListBox.nav ListBoxItem:selected /template/ ContentPresenter"><Setter Property="Background" Value="{StaticResource Fg}" /><Setter Property="TextElement.Foreground" Value="#000000" /></Style>
+    <Style Selector="ListBox.nav ListBoxItem:selected TextBlock"><Setter Property="Foreground" Value="#000000" /></Style>
+    <Style Selector="ListBox.nav ListBoxItem:selected mi|MaterialIcon"><Setter Property="Foreground" Value="#000000" /></Style>
+
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="{StaticResource Fg}" />
+      <Setter Property="Foreground" Value="#000000" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Padding" Value="18,10" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter"><Setter Property="Background" Value="#D0D0D0" /><Setter Property="Foreground" Value="#000000" /></Style>
+    <Style Selector="Button.primary:disabled /template/ ContentPresenter"><Setter Property="Background" Value="#2A2A2A" /><Setter Property="Foreground" Value="#6A6A6A" /></Style>
+    <Style Selector="Button.ghost">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="#3A3A3A" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Padding" Value="18,10" />
+    </Style>
+    <Style Selector="ProgressBar"><Setter Property="Foreground" Value="{StaticResource Fg}" /><Setter Property="Background" Value="#1F1F1F" /></Style>
+  </Application.Styles>
+</Application>

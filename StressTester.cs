@@ -1,4 +1,6 @@
+#if WINDOWS
 using System.Management;
+#endif
 
 namespace ResetExplode;
 
@@ -141,6 +143,7 @@ public sealed class StressTester
 
     private static long FreePhysicalMemory()
     {
+#if WINDOWS
         try
         {
             using var s = new ManagementObjectSearcher("SELECT FreePhysicalMemory FROM Win32_OperatingSystem");
@@ -148,6 +151,15 @@ public sealed class StressTester
                 return Convert.ToInt64(mo["FreePhysicalMemory"]) * 1024; // vem em KB
         }
         catch { }
+#else
+        try
+        {
+            foreach (var line in File.ReadLines("/proc/meminfo"))
+                if (line.StartsWith("MemAvailable:"))
+                    return long.Parse(line.Split(' ', StringSplitOptions.RemoveEmptyEntries)[1]) * 1024; // vem em kB
+        }
+        catch { }
+#endif
         return 1L << 30;
     }
 }
