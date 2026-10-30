@@ -15,6 +15,7 @@ Feita para quem está saindo do Windows e quer o mesmo tipo de painel (sensores,
 | Sistema | Distribuição (versão, variante e canal da imagem), kernel, placa-mãe e BIOS, CPU, GPUs, memória e discos |
 | Sensores | Tudo que o `hwmon` expõe, agrupado por chip com nome legível (SSD, GPU, CPU, módulos de RAM, Wi-Fi…) |
 | Placa de vídeo | GPUs **AMD** (dedicada e integrada): modelo exato, uso, VRAM, consumo, clocks, PCIe, temperaturas, ventoinha |
+| Compatibilidade | Guia com os sites de referência (ProtonDB, Steam Deck, anti-cheat, docs do Bazzite) e o que cada nota significa |
 | Jogos | Biblioteca com capas: Steam (nativa e Flatpak), Epic, GOG, Heroic, Lutris e pastas que você vincula; busca e botão **JOGAR** |
 | Stress | Carga de CPU e teste de RAM, com parada automática por temperatura ou erro de memória |
 | Bench CPU | Path tracer no estilo Cinebench (multi-core e single-core) |
@@ -22,9 +23,11 @@ Feita para quem está saindo do Windows e quer o mesmo tipo de painel (sensores,
 
 ### Jogos e capas
 
+Jogos da Steam mostram a nota do **ProtonDB** e o selo do **Steam Deck**. O ProtonDB não tem API oficial: o app usa um endereço público dele que pode mudar sem aviso; se isso acontecer, só o selo some, e o botão de livro continua abrindo a página do jogo.
+
 A tela **Jogos** lê as bibliotecas instaladas e abre cada jogo pelo launcher dono dele (Steam, Heroic, Lutris). Jogos fora dos launchers entram por **Adicionar pasta**: escolha uma pasta e cada subpasta vira um jogo (se tiver `start.sh`, executável Linux ou AppImage, abre direto; jogos de Windows aparecem, mas precisam ser adicionados ao Steam/Heroic/Lutris para rodar com Proton).
 
-As capas vêm do próprio launcher (Steam, Epic e GOG já trazem imagem, sem chave). Para os demais, o app pode buscar no [SteamGridDB](https://www.steamgriddb.com/), um banco público de capas. Isso é **opcional**: crie uma conta gratuita, copie a chave em *Preferências → API* e cole em **Capas (SteamGridDB)**; o botão **Abrir site da chave** leva direto à página. Sem chave, o jogo aparece com a inicial do nome. A chave fica em `~/.config/resetexplode/settings.json`, legível só por você.
+As capas vêm do próprio launcher (Steam, Epic e GOG já trazem imagem, sem chave). Para os demais, o app pode buscar no [SteamGridDB](https://www.steamgriddb.com/), um banco público de capas. Isso é **opcional**: crie uma conta gratuita, copie a chave em *Preferências → API* e cole em **Capas (SteamGridDB)**; o botão **Abrir site da chave** leva direto à página. Sem chave, o jogo aparece com a inicial do nome. A chave tem **32 letras e números**; se você colar com texto junto (por exemplo `key: ...`), o app extrai só a chave. O botão de imagem em cada cartão abre a lista de capas para você **escolher** a que preferir (ou voltar ao padrão). A chave fica em `~/.config/resetexplode/settings.json`, legível só por você.
 
 > Testado com uma biblioteca Steam real. Epic, GOG, Heroic, Lutris e pastas foram testados com arquivos de teste no formato esperado, ainda não com instalações reais: se algo não aparecer, abra uma issue com o que `resetexplode --listar-jogos` mostra.
 
@@ -52,7 +55,7 @@ Isso copia o app para `~/.local/share/resetexplode`, cria o comando `resetexplod
 ./instalar.sh --remover
 ```
 
-Para abrir direto numa tela: `resetexplode --pagina=gpu` (valores: `visao`, `sistema`, `sensores`, `gpu`, `jogos`, `stress`, `bench`, `permissoes`). `resetexplode --listar-jogos` imprime a biblioteca em JSON, sem abrir janela.
+Para abrir direto numa tela: `resetexplode --pagina=gpu` (valores: `visao`, `sistema`, `sensores`, `gpu`, `jogos`, `compat`, `stress`, `bench`, `permissoes`). `resetexplode --listar-jogos` imprime a biblioteca em JSON, sem abrir janela.
 
 ## Primeira abertura: permissões
 
